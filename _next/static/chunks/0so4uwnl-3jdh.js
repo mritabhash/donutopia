@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,92787,e=>{"use strict";var t=e.i(43476),i=e.i(36513),c=e.i(55067);e.s(["default",0,function(){return(0,t.jsx)(i.default,{pack:(0,c.clientPack)("lexicon")})}])},10150,e=>{e.v(e=>Promise.resolve().then(()=>e(67334)))}]);

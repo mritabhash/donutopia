@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,25481,t=>{"use strict";var e=t.i(43476),i=t.i(36513),o=t.i(55067);t.s(["default",0,function(){return(0,e.jsx)(i.default,{pack:(0,o.clientPack)("sports")})}])},10150,t=>{t.v(t=>Promise.resolve().then(()=>t(67334)))}]);
