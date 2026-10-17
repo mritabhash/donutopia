@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 2.
+// Donutopia midnight bakery theme, version 3: saved-run recovery.
 importScripts('./pages-scoring.js');
 const base=new URL(self.registration.scope).pathname.replace(/\/$/,'');
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
