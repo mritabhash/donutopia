@@ -1,8 +1,4 @@
 {
-  "name": "Donutopia",
-  "version": "1.0.0",
-  "hosting": "GitHub Pages",
-  "questions": 1303,
-  "gameplay_rules": 2,
-  "gameplay": "7 open-answer rounds, 3-second preview, 25-second timer, unlimited invalid retries, first accepted answer locks, rarity scoring"
+  "builtAt": "2026-10-16T22:18:20.583Z",
+  "base": "/donutopia"
 }
