@@ -1,11 +1,28 @@
-// Donutopia midnight bakery theme, version 3: saved-run recovery.
+// Donutopia midnight bakery theme, version 4: optional AI backend.
 importScripts('./pages-scoring.js');
+let backendConfig;
+async function backendOrigin(){
+ if(!backendConfig)backendConfig=fetch(base+'/backend-config.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Configuration unavailable');return r.json();}).catch(e=>{backendConfig=null;throw e;});
+ const config=await backendConfig;
+ if(!config.apiOrigin)return '';
+ const u=new URL(config.apiOrigin);if(u.protocol!=='https:'||!u.hostname.endsWith('.workers.dev')||u.pathname!=='/')throw Error('Invalid backend configuration');
+ return u.origin;
+}
 const base=new URL(self.registration.scope).pathname.replace(/\/$/,'');
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
 const read=async p=>{const r=await fetch(base+'/data/'+p);if(!r.ok)throw Error('Missing puzzle data');return r.json();};
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 async function api(request,p){
+ const remotePath=/^\/api\/(today(?:\/complete)?|submit|reveal|answer-popularity|(?:unlimited|archive|packs\/(?:movies|sports|geography|lexicon))\/\d+(?:\/(?:submit|reveal|complete))?)$/;
+ if(remotePath.test(p)){
+  let origin;try{origin=await backendOrigin();}catch{return json({error:'Cannot load game configuration. Please reload.'},503);}
+  if(origin){
+   try{return await fetch(origin+p,{method:request.method,headers:{'Content-Type':'application/json'},body:request.method==='POST'?await request.text():undefined,credentials:'omit'});}
+   catch{return json({error:'AI judging is temporarily unavailable. Retry your answer.'},503);}
+  }
+ }
+
  if(p==='/api/today')return json(await read('today.json'));
  if(p==='/api/reveal')return json(await read('api/reveal.json'));
  if(p==='/api/announcements/current')return json({announcement:null});
