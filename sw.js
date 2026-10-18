@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 4: optional AI backend.
+// Donutopia midnight bakery theme, version 5: live AI backend.
 importScripts('./pages-scoring.js');
 let backendConfig;
 async function backendOrigin(){

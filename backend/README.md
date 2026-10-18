@@ -1,7 +1,7 @@
 # Donutopia AI judging backend
 
 Status: implementation prepared, Cloudflare deployment and live model evaluation pending.
-The public website uses its existing static puzzle while `backend-config.json.apiOrigin` is empty.
+The public website uses the deployed Worker from `backend-config.json.apiOrigin`. If the Worker fails, answers remain unscored until retried.
 
 ## Included
 
