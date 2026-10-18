@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 8: revalidate patched game scripts.
+// Donutopia midnight bakery theme, version 9: remove commercial UI and legacy branding.
 importScripts('./pages-scoring.js');
 let backendConfig;
 async function backendOrigin(){

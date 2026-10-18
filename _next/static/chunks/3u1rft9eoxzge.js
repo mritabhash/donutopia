@@ -23,7 +23,7 @@
       <img class="dr-buddy-car" src="${l.buddyCar}" alt="" aria-hidden>
       <div class="ds-mascot" title="a friend">
         <span class="ds-mascot-sprite">
-          <img src="/tiers/krillion.png" alt="Glazed Donut companion">
+          <img src="/tiers/donut.svg" alt="Glazed Donut companion">
         </span>
         <span class="ds-blub">vroom!</span>
       </div>

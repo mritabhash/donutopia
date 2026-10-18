@@ -1,4 +1,5 @@
 (async()=>{
+ if(/\/(restore|unlock)\/?$/.test(location.pathname)){location.replace('/donutopia/');return;}
  const base=new URL(document.currentScript?.src||document.querySelector('script[src$="pages-bootstrap.js"]').src).pathname.replace(/\/pages-bootstrap\.js$/,'');
  document.addEventListener('click',event=>{
   const a=event.target.closest('a[href]');if(!a||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
