@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 7: remove remaining timed merchandise promotion.
+// Donutopia midnight bakery theme, version 8: revalidate patched game scripts.
 importScripts('./pages-scoring.js');
 let backendConfig;
 async function backendOrigin(){
@@ -48,7 +48,7 @@ self.addEventListener('fetch',event=>{
   if(p.startsWith('/api/'))return api(event.request,p);
   if(p==='/_next/image'){const image=url.searchParams.get('url');if(!image?.startsWith('/')||image.startsWith('//'))return new Response('Not found',{status:404});return fetch(base+image);}
   if(event.request.mode==='navigate'&&!pathHasExtension(p))p=p.replace(/\/$/,'')+'/index.html';
-  return fetch(base+p+url.search);
+  return fetch(base+p+url.search,{cache:p.endsWith('.js')?'no-cache':'default'});
  })().catch(()=>new Response('Unable to load this resource',{status:503})));
 });
 function pathHasExtension(p){return /\.[a-z0-9]+$/i.test(p);}
