@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 6: normalize AI proxy responses.
+// Donutopia midnight bakery theme, version 7: remove remaining timed merchandise promotion.
 importScripts('./pages-scoring.js');
 let backendConfig;
 async function backendOrigin(){
