@@ -1,6 +1,6 @@
 # Donutopia AI judging backend
 
-Status: implementation prepared, Cloudflare deployment and live model evaluation pending.
+Status: deployed on Cloudflare and enabled on GitHub Pages. Live browser submissions have returned AI judgments and scores. Rarity remains a model estimate, not measured player frequency.
 The public website uses the deployed Worker from `backend-config.json.apiOrigin`. If the Worker fails, answers remain unscored until retried.
 
 ## Included
@@ -26,7 +26,7 @@ Tests use a mock model. They test routing, validation, caching, rollover/DST, pr
 
 ## Deploy on the Workers Free plan
 
-1. Create a KV namespace for judgments. Put its ID in `backend/wrangler.jsonc` in place of `REPLACE_WITH_KV_NAMESPACE_ID`.
+1. Create a KV namespace for judgments. Set its ID in `backend/wrangler.jsonc` (the current deployment is already configured).
 2. Keep the `AI`, `JUDGMENTS` and `JUDGE_LIMITER` bindings from the configuration. The rate limit is 20 requests per minute per IP at Cloudflare's local rate-limiting scope; it is not a global spending cap or authentication.
 3. Authenticate Wrangler to the Cloudflare account, then run `npx wrangler deploy` from `backend/`. Alternatively deploy `worker.mjs` as an ES module Worker through the dashboard and configure the same bindings.
 4. Verify `/health` using the Origin header `https://mritabhash.github.io`. All three bindings must be ready.
