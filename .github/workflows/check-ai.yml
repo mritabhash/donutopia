@@ -13,6 +13,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json
+          from urllib.error import HTTPError
           from urllib.request import Request, urlopen
 
           base = 'https://donutopia-api.mritabhash.workers.dev'
@@ -20,8 +21,12 @@ jobs:
           def call(path, payload=None):
               body = None if payload is None else json.dumps(payload).encode()
               headers = {'Origin': origin, 'Content-Type': 'application/json'}
-              with urlopen(Request(base + path, data=body, headers=headers), timeout=45) as response:
-                  return response.status, json.load(response)
+              try:
+                  with urlopen(Request(base + path, data=body, headers=headers), timeout=45) as response:
+                      return response.status, json.load(response)
+              except HTTPError as error:
+                  print('Worker HTTP error:', error.code, error.read().decode()[:500])
+                  raise
 
           status, health = call('/health')
           print('health', status, health)
