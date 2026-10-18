@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Donutopia AI check</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<body style="background:#1d1120;color:#fff3df;font:16px/1.5 system-ui;padding:2rem;max-width:38rem;margin:auto">
+<h1>Donutopia AI check</h1>
+<p>This checks the live question bank and one AI judgment. It does not change your game progress.</p>
+<button id="run" style="font:inherit;padding:.7rem 1rem">Run check</button>
+<pre id="result" style="white-space:pre-wrap"></pre>
+<script>
+const base='https://donutopia-api.mritabhash.workers.dev';
+const out=document.querySelector('#result');
+document.querySelector('#run').onclick=async()=>{
+ out.textContent='Checking…';
+ try{
+  const get=async path=>{const response=await fetch(base+path); const data=await response.json(); if(!response.ok)throw Error(path+' '+response.status+' '+JSON.stringify(data));return data};
+  const health=await get('/health');
+  out.textContent='Health: '+JSON.stringify(health)+'\n';
+  if(!health.ok||health.questions!==351)throw Error('The bindings or question bank are not ready.');
+  const game=await get('/api/unlimited/1');
+  if(game.prompts.length!==7)throw Error('Expected seven prompts.');
+  out.textContent+='Seven prompts loaded.\n';
+  const question=game.prompts.find(q=>q.text==='Name a tree native to Australia');
+  if(!question)throw Error('Expected test question missing.');
+  const response=await fetch(base+'/api/unlimited/1/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:game.version,promptId:question.id,answer:'Eucalyptus'})});
+  const result=await response.json();
+  out.textContent+='Eucalyptus judgment: '+response.status+' '+JSON.stringify(result)+'\n';
+  if(!response.ok||!result.accepted||!result.score)throw Error('AI judgment did not pass.');
+  out.textContent+='PASS';
+ }catch(error){out.textContent+='\nFAIL: '+error.message;}
+};
+</script>
+</body></html>

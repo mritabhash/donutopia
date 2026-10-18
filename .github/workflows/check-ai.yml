@@ -1,9 +1,5 @@
 name: Check live AI judge
 on:
-  push:
-    paths:
-      - backend/wrangler.jsonc
-      - .github/workflows/check-ai.yml
   workflow_dispatch:
 jobs:
   check:
