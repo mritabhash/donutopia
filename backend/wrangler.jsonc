@@ -5,7 +5,7 @@
   "workers_dev": true,
   "ai": {"binding": "AI"},
   "vars": {"ALLOWED_ORIGIN": "https://mritabhash.github.io"},
-  "kv_namespaces": [{"binding": "JUDGMENTS", "id": "REPLACE_WITH_KV_NAMESPACE_ID"}],
+  "kv_namespaces": [{"binding": "JUDGMENTS", "id": "ffbcaabaf8364c268fa5baee5236b03f"}],
   "ratelimits": [{"name": "JUDGE_LIMITER", "namespace_id": "1001", "simple": {"limit": 20, "period": 60}}],
   "observability": {"enabled": false}
 }
