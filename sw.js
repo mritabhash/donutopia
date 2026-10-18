@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 5: live AI backend.
+// Donutopia midnight bakery theme, version 6: normalize AI proxy responses.
 importScripts('./pages-scoring.js');
 let backendConfig;
 async function backendOrigin(){
@@ -18,7 +18,11 @@ async function api(request,p){
  if(remotePath.test(p)){
   let origin;try{origin=await backendOrigin();}catch{return json({error:'Cannot load game configuration. Please reload.'},503);}
   if(origin){
-   try{return await fetch(origin+p,{method:request.method,headers:{'Content-Type':'application/json'},body:request.method==='POST'?await request.text():undefined,credentials:'omit'});}
+   try{
+    const upstream=await fetch(origin+p,{method:request.method,headers:{'Content-Type':'application/json'},body:request.method==='POST'?await request.text():undefined,credentials:'omit',signal:AbortSignal.timeout(18000)});
+    // Return a same-origin response rather than leaking the cross-origin response type.
+    return new Response(upstream.body,{status:upstream.status,statusText:upstream.statusText,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+   }
    catch{return json({error:'AI judging is temporarily unavailable. Retry your answer.'},503);}
   }
  }
