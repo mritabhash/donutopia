@@ -7,7 +7,11 @@
   if(u.origin===location.origin){event.preventDefault();event.stopImmediatePropagation();const p=u.pathname.startsWith(base+'/')?u.pathname:base+u.pathname;location.assign(p+u.search+u.hash);}
   else if(/buy\.stripe\.com|shop\.krillion\.io/.test(u.hostname)){event.preventDefault();event.stopImmediatePropagation();alert('Purchases are not connected in this replica.');}
  },true);
- document.addEventListener('click',event=>{const b=event.target.closest('button');if(b&&/sign in with|continue with|send.*link|restore purchase/i.test(b.textContent)){event.preventDefault();event.stopImmediatePropagation();alert('Account services are unavailable in this replica. Your progress is saved in this browser.');}},true);
+ document.addEventListener('click',event=>{
+  const b=event.target.closest('button');if(!b)return;
+  if(/sign in with|continue with|send.*link/i.test(b.textContent)){event.preventDefault();event.stopImmediatePropagation();location.assign(base+'/account/');}
+  else if(/restore purchase/i.test(b.textContent)){event.preventDefault();event.stopImmediatePropagation();alert('Purchases are not connected.');}
+ },true);
  if(location.pathname.replace(/\/$/,'')===base){
   const welcome=document.createElement('section');
   welcome.setAttribute('aria-label','Welcome to Donutopia');
