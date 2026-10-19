@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import worker,{dayInfo,selectQuestions,parseJudgment,VERSION} from '../worker.mjs';
+import worker,{dayInfo,selectQuestions,parseJudgment,VERSION,withTimeout} from '../worker.mjs';
 const origin='https://mritabhash.github.io';
 function request(path,body,site=origin){return new Request('https://donutopia-api.example.workers.dev'+path,{method:body?'POST':'GET',headers:{Origin:site,'Content-Type':'application/json','CF-Connecting-IP':'192.0.2.1'},...(body?{body:JSON.stringify(body)}:{})});}
 const pending=[];const ctx={waitUntil(p){pending.push(p)}};
-function environment(){const cache=new Map;let calls=0;return {get calls(){return calls},AI:{async run(){calls++;return {choices:[{message:{content:JSON.stringify({valid:true,canonical:'test answer',tier:'rare',confidence:.95,reason:'Fits the prompt.'})}}]}}},JUDGMENTS:{async get(k){return cache.get(k)||null},async put(k,v){cache.set(k,JSON.parse(v))}},JUDGE_LIMITER:{async limit(){return {success:true}}}};}
+function environment(){const cache=new Map;let calls=0;return {get calls(){return calls},AI:{async run(){calls++;return {choices:[{message:{content:JSON.stringify({valid:true,canonical:'test answer',rarity:.6,confidence:.95,reason:'Fits the prompt.'})}}]}}},JUDGMENTS:{async get(k){return cache.get(k)||null},async put(k,v){cache.set(k,JSON.parse(v))}},JUDGE_LIMITER:{async limit(){return {success:true}}}};}
 test('daily boundaries and DST use the existing New York game calendar',()=>{
  assert.equal(dayInfo(new Date('2026-10-17T03:59:00Z')).date,'2026-10-16');
  assert.equal(dayInfo(new Date('2026-10-17T04:00:00Z')).date,'2026-10-17');
@@ -16,9 +16,9 @@ test('50 batches have 350 unique open-ended questions and deterministic order',(
  for(const scope of ['movies','sports','geography','lexicon','unlimited'])assert.equal(new Set(selectQuestions(scope,100).map(q=>q.id)).size,7);
 });
 test('judge output is validated, bounded, and not trusted for numeric scores',()=>{
- assert.throws(()=>parseJudgment({response:'not json'}));assert.throws(()=>parseJudgment({response:{valid:true,canonical:'x',tier:'admin',confidence:1,reason:'x'}}));
- assert.throws(()=>parseJudgment({response:{valid:true,canonical:'x',tier:'rare',confidence:.3,reason:'x'}}));
- assert.equal(parseJudgment({response:{valid:true,canonical:'x',tier:'krillion',score:9999,confidence:.9,reason:'x'}}).score,100);
+ assert.throws(()=>parseJudgment({response:'not json'}));assert.throws(()=>parseJudgment({response:{valid:true,canonical:'x',rarity:2,confidence:1,reason:'x'}}));
+ assert.throws(()=>parseJudgment({response:{valid:true,canonical:'x',rarity:.6,confidence:.3,reason:'x'}}));
+ assert.equal(parseJudgment({response:{valid:true,canonical:'x',rarity:1,score:9999,confidence:.9,reason:'x'}}).score,100);
 });
 test('bank and valid submission use AI, then cache the same answer',async()=>{
  const env=environment();const today=await(await worker.fetch(request('/api/today'),env,ctx)).json();assert.equal(today.prompts.length,7);
@@ -37,4 +37,15 @@ test('provider failures, missing bindings and rate limits never become incorrect
  assert.equal((await worker.fetch(request('/api/submit',body),{},ctx)).status,503);
  const env=environment();env.AI.run=async()=>{throw Error('quota exhausted')};let result=await worker.fetch(request('/api/submit',body),env,ctx);assert.equal(result.status,503);assert.equal((await result.json()).accepted,undefined);
  env.JUDGE_LIMITER.limit=async()=>({success:false});assert.equal((await worker.fetch(request('/api/submit',body),env,ctx)).status,429);
+});
+
+test('common valid answers earn positive points and rarity increases them',()=>{
+ const judge=rarity=>parseJudgment({response:{valid:true,canonical:'Dal',rarity,confidence:.99,reason:'A lentil dish.'}});
+ assert.equal(judge(0).score,1);assert.equal(judge(.001).score,1);assert.equal(judge(.3).score,30);assert.equal(judge(1).score,100);
+ assert.throws(()=>judge(NaN));
+ assert.throws(()=>parseJudgment({response:{valid:false,canonical:'Regional dish',rarity:0,confidence:.8,reason:'Unfamiliar.'}}));
+});
+test('an indefinitely pending provider call has a bounded response wait',async()=>{
+ await assert.rejects(withTimeout(new Promise(()=>{}),10),/timeout/);
+ assert.equal(await withTimeout(Promise.resolve('ready'),100),'ready');
 });
