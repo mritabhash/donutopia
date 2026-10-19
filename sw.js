@@ -1,4 +1,4 @@
-// Donutopia midnight bakery theme, version 9: remove commercial UI and legacy branding.
+// Donutopia midnight bakery theme, version 10: baking companion and rarity artwork.
 importScripts('./pages-scoring.js');
 let backendConfig;
 async function backendOrigin(){
