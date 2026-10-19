@@ -49,3 +49,9 @@ test('an indefinitely pending provider call has a bounded response wait',async()
  await assert.rejects(withTimeout(new Promise(()=>{}),10),/timeout/);
  assert.equal(await withTimeout(Promise.resolve('ready'),100),'ready');
 });
+
+test('new daily batches use the broad bank without rewriting historical batches',()=>{
+ const all=Array.from({length:50},(_,i)=>selectQuestions('daily',97+i)).flat();
+ assert.equal(new Set(all.map(q=>q.id)).size,350);
+ assert.ok(selectQuestions('unlimited',1).every(q=>!q.text.includes('native to Australia')));
+});

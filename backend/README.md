@@ -1,6 +1,6 @@
 # Donutopia AI judging backend
 
-Status: the v1 judge is live. The rarity-v2 update in this repository is tested locally and awaits deployment to Cloudflare. Rarity remains a model estimate, not measured player frequency.
+Status: rarity-v2 is live. The new broad-question bank (bakery-open-v2) is tested locally and awaits deployment to Cloudflare. Rarity remains a model estimate, not measured player frequency.
 The public website uses the deployed Worker from `backend-config.json.apiOrigin`. If the Worker fails, answers remain unscored until retried.
 
 ## Included
@@ -42,6 +42,10 @@ The prompt resists answer-text instructions, but LLM judgments can still be wron
 
 ## Pending rarity-v2 deployment
 
-Replace the `donutopia-api` Worker code with `worker.mjs` and deploy, keeping the existing bindings. GitHub Pages deployment alone does not publish the Worker. `/health` will report `judgeVersion: rarity-v2` after deployment. The question version and question ordering are unchanged.
+Replace the `donutopia-api` Worker code with `worker.mjs` and deploy, keeping the existing bindings. GitHub Pages deployment alone does not publish the Worker. `/health` will report `judgeVersion: rarity-v2` after deployment. The broad-question update uses version bakery-open-v2. Daily batches through #96 retain their original questions so existing scores and archive results still match. The broad bank starts with daily batch #97; unlimited and recipe boxes use it immediately after deployment.
 
 AI response waiting is capped at 8 seconds; cache lookup at 300 milliseconds. A timeout returns a retryable error without marking an answer wrong. This bounds the response wait, but does not guarantee cancellation of underlying model computation or eliminate network delay. Uncertain judgments remain retryable. The prompt asks the model to evaluate category validity independently of commonness, but factual accuracy still requires live evaluation.
+
+## Broad prompt design
+
+351 prompts favour familiar categories and everyday situations with many possible valid answers. Rarity provides the challenge; specialist factual constraints and unusual initial-letter combinations have been removed. Examples include desserts, kitchen objects, movie characters and clothing. The judge is instructed to accept reasonable specific and regional examples without inventing extra constraints. Historical daily questions are retained separately for replay compatibility.
