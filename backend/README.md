@@ -11,7 +11,7 @@ The public website uses the deployed Worker from `backend-config.json.apiOrigin`
 - Cloudflare Workers AI Gemma 4 26B A4B for validity and estimated rarity. The v2 judge separates validity from rarity and gives accepted answers 1–100 integer points, with a minimum of 1. Visual tiers are derived from the score.
 - Accepted judgments are cached for seven days, keyed by model, question, normalized answer and judge version. Rejections are not cached. KV is eventually consistent, so simultaneous first requests can get different model estimates. No claim of observed answer frequency or perfect accuracy.
 - Per-IP request limiting, bounded input and output, model confidence checks, no browser API secrets, and retryable service errors.
-- Existing browser-local progress remains the score store. No account syncing or verified global leaderboard is implemented.
+- Existing browser-local progress remains the score store. The existing game remains browser-local. A separate account and private-room service is implemented but awaits D1 and Google sign-in configuration. See [ACCOUNTS-SETUP.md](ACCOUNTS-SETUP.md). No public global leaderboard is provided.
 
 ## Build and check
 
@@ -49,3 +49,7 @@ AI response waiting is capped at 8 seconds; cache lookup at 300 milliseconds. A 
 ## Broad prompt design
 
 351 prompts favour familiar categories and everyday situations with many possible valid answers. Rarity provides the challenge; specialist factual constraints and unusual initial-letter combinations have been removed. Examples include desserts, kitchen objects, movie characters and clothing. The judge is instructed to accept reasonable specific and regional examples without inventing extra constraints. Historical daily questions are retained separately for replay compatibility.
+
+## Accounts and multiplayer
+
+The bundled Worker now includes `/api/social/*`. It fails closed until DB and GOOGLE_CLIENT_ID are configured. See [ACCOUNTS-SETUP.md](ACCOUNTS-SETUP.md) for features, deployment, privacy, test coverage and activation steps. Existing judging routes do not require these additional bindings.

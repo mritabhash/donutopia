@@ -53,12 +53,13 @@ async function bodyOf(request){
 export default {
  async fetch(request,env,ctx){
   const origin=request.headers.get('Origin'),allowed=env.ALLOWED_ORIGIN||'https://mritabhash.github.io';
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Origin':allowed,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','X-Content-Type-Options':'nosniff'};
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Origin':allowed,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization','X-Content-Type-Options':'nosniff'};
   const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
   if(origin!==allowed)return reply({error:'Origin not allowed'},403);
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
   const url=new URL(request.url),path=url.pathname;
   if(!['GET','POST'].includes(request.method))return reply({error:'Method not allowed'},405);
+  if(path.startsWith('/api/social/'))return socialFetch(request,env,ctx,reply);
   const now=dayInfo();
   if(path==='/health')return reply({ok:!!(env.AI&&env.JUDGMENTS&&env.JUDGE_LIMITER),questions:BANK.length,model:MODEL,version:VERSION,judgeVersion:JUDGE_VERSION});
   const match=path.match(/^\/api\/(unlimited|archive|packs\/(movies|sports|geography|lexicon))\/(\d+)(?:\/(submit|reveal|complete))?$/);
@@ -79,15 +80,20 @@ export default {
   if(!env.AI||!env.JUDGMENTS||!env.JUDGE_LIMITER)return reply({error:'AI judging is not configured yet. Your answer has not been scored.'},503);
   const rate=await env.JUDGE_LIMITER.limit({key:request.headers.get('CF-Connecting-IP')||'unknown'});
   if(!rate.success)return reply({error:'Too many attempts. Wait a minute and retry.'},429);
-  const answer=body.answer.normalize('NFKC').trim().replace(/\s+/g,' ');
+  try{return reply(await judgeAnswer(prompt,body.answer,env,ctx));}
+  catch{return reply({error:'The judge took too long or could not verify this answer. Please retry; your answer has not been marked wrong.'},503);}
+ }
+};
+
+async function judgeAnswer(prompt,rawAnswer,env,ctx){
+ const promptId=prompt.id;
+  const answer=rawAnswer.normalize('NFKC').trim().replace(/\s+/g,' ');
   const key=VERSION+':'+JUDGE_VERSION+':'+await digest(MODEL+'|'+promptId+'|'+answer.toLowerCase());
-  try{
-   const cached=await withTimeout(env.JUDGMENTS.get(key,'json'),300).catch(()=>null);if(cached?.accepted)return reply(cached);
+   const cached=await withTimeout(env.JUDGMENTS.get(key,'json'),300).catch(()=>null);if(cached?.accepted)return cached;
    const raw=await withTimeout(env.AI.run(MODEL,{messages:[{role:'system',content:SYSTEM},{role:'user',content:JSON.stringify({question:prompt.text,answer})}],temperature:0,max_tokens:160,chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}),JUDGE_TIMEOUT_MS);
    const result=parseJudgment(raw);
    // Preserve availability if the free KV write allocation is exhausted.
    if(result.accepted)ctx.waitUntil(env.JUDGMENTS.put(key,JSON.stringify(result),{expirationTtl:604800}).catch(()=>{}));
-   return reply(result);
-  }catch{return reply({error:'The judge took too long or could not verify this answer. Please retry; your answer has not been marked wrong.'},503);}
- }
-};
+   return result;
+
+}

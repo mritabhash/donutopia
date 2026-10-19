@@ -1,0 +1,12 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE users (id TEXT PRIMARY KEY, subject TEXT NOT NULL UNIQUE, name TEXT NOT NULL, invite TEXT NOT NULL UNIQUE, created INTEGER NOT NULL);
+CREATE TABLE friendships (sender TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, recipient TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL CHECK(status IN ('pending','accepted')), PRIMARY KEY(sender,recipient), CHECK(sender<>recipient));
+CREATE TABLE rooms (id TEXT PRIMARY KEY, host TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, state TEXT NOT NULL CHECK(state IN ('lobby','playing','closed')), seed INTEGER NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, started INTEGER);
+CREATE TABLE members (room TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE, user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, PRIMARY KEY(room,user));
+CREATE TABLE games (id TEXT PRIMARY KEY, user TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL CHECK(kind IN ('daily','room')), day TEXT NOT NULL, room TEXT REFERENCES rooms(id) ON DELETE CASCADE, prompts TEXT NOT NULL, created INTEGER NOT NULL, completed INTEGER, UNIQUE(user,kind,day,room));
+CREATE UNIQUE INDEX one_daily ON games(user,day) WHERE kind='daily';
+CREATE UNIQUE INDEX one_room_game ON games(user,room) WHERE kind='room';
+CREATE TABLE turns (game TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE, slot INTEGER NOT NULL CHECK(slot BETWEEN 0 AND 6), answer TEXT NOT NULL, score INTEGER NOT NULL CHECK(score BETWEEN 0 AND 100), reason TEXT NOT NULL, PRIMARY KEY(game,slot));
+CREATE INDEX history ON games(user,completed);
+CREATE INDEX room_expiry ON rooms(expires);
+CREATE INDEX friend_recipient ON friendships(recipient,status);
