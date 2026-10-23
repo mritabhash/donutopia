@@ -22,9 +22,20 @@ const BAKERY_PERSONALITIES={
 function makeRewardInteractive(img,item,parent){
  const personality=BAKERY_PERSONALITIES[item.id];if(!personality)return;
  const control=document.createElement('button');control.type='button';control.className='pixel-play';control.setAttribute('aria-label',personality.action);img.replaceWith(control);control.append(img);
- const speech=document.createElement('span');speech.className='pixel-speech';speech.setAttribute('role','status');speech.setAttribute('aria-live','polite');parent.append(speech);let count=0,timer;
- control.onclick=()=>{clearTimeout(timer);img.classList.remove('reacting');void img.offsetWidth;img.style.setProperty('--reaction',personality.motion);img.classList.add('reacting');speech.textContent=personality.lines[count++%personality.lines.length];timer=setTimeout(()=>img.classList.remove('reacting'),1100);};
- img.classList.add('living-pixel');img.style.setProperty('--idle-delay',(-Object.keys(BAKERY_PERSONALITIES).indexOf(item.id)%5)+'s');
+ const speech=document.createElement('span');speech.className='pixel-speech';speech.setAttribute('role','status');speech.setAttribute('aria-live','polite');parent.append(speech);let count=0,reacting=false;
+ const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+ img.style.setProperty('--reaction',personality.motion);
+ control.onclick=()=>{
+  if(reacting)return;
+  speech.textContent=personality.lines[count++%personality.lines.length];
+  if(reduced.matches)return;
+  reacting=true;img.classList.add('reacting');
+  let timer;const finish=()=>{clearTimeout(timer);img.removeEventListener('animationend',finish);img.classList.remove('reacting');reacting=false;};
+  img.addEventListener('animationend',finish,{once:true});
+  timer=setTimeout(finish,900);
+ };
+ control.classList.add('living-pixel');control.style.setProperty('--idle-delay',(-Object.keys(BAKERY_PERSONALITIES).indexOf(item.id)%5)+'s');
+
 }
 
 /* Shared pixel collection renderer. Public gallery is read-only; all spending is server-authorized. */

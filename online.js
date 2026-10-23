@@ -56,7 +56,7 @@ $('back').onclick=()=>run(async()=>{$('game').hidden=true;await refresh();if(roo
  try{
   const config=await fetch(new URL('backend-config.json',base),{cache:'no-store'}).then(r=>r.json());apiOrigin=config.apiOrigin;
   const setup=await api('/config');if(!setup.ready){status('Online accounts and rooms are being set up. You can still play the daily game.');return;}
-  const start=()=>{if(!window.google?.accounts?.id)return false;google.accounts.id.initialize({client_id:setup.googleClientId,callback:response=>run(async()=>{token=response.credential;sessionStorage.setItem('donutopia.identity',token);await api('/me',{});await refresh();})});google.accounts.id.renderButton($('google'),{theme:'outline',size:'large'});return true;};
+  const start=()=>{if(!window.google?.accounts?.id)return false;google.accounts.id.initialize({client_id:setup.googleClientId,callback:response=>run(async()=>{token=response.credential;sessionStorage.setItem('donutopia.identity',token);await api('/me',{});await refresh();})});google.accounts.id.renderButton($('google'),{type:'standard',theme:'filled_black',size:'large',text:'continue_with',shape:'rectangular',logo_alignment:'left',width:String(Math.min(320,Math.max(200,$('google').clientWidth)))});return true;};
   if(!start()){let tries=0;const timer=setInterval(()=>{if(start()||++tries>30){clearInterval(timer);if(tries>30)status('Google sign-in could not load. Refresh to try again.');}},500);}
   if(token)await refresh();else status('Sign in to open your bakery.');
  }catch(e){status('Online accounts and rooms are not available yet. '+e.message);}
