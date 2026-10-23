@@ -1,0 +1,317 @@
+{
+  "craftCost": 5,
+  "buddies": [
+    {
+      "id": "glaze",
+      "name": "Glaze",
+      "description": "A strawberry donut with a generous sprinkle habit.",
+      "asset": "rewards/glaze.svg"
+    },
+    {
+      "id": "crumb",
+      "name": "Crumb",
+      "description": "A chocolate-chip cookie with very small boots.",
+      "asset": "rewards/crumb.svg"
+    },
+    {
+      "id": "crescent",
+      "name": "Crescent",
+      "description": "A buttery croissant, permanently pleased.",
+      "asset": "rewards/crescent.svg"
+    },
+    {
+      "id": "mallow",
+      "name": "Mallow",
+      "description": "A marshmallow who takes softness seriously.",
+      "asset": "rewards/mallow.svg"
+    },
+    {
+      "id": "miso",
+      "name": "Miso",
+      "description": "A pistachio macaron with a sweet centre.",
+      "asset": "rewards/miso.svg"
+    },
+    {
+      "id": "cocoa",
+      "name": "Cocoa",
+      "description": "A brownie with a slightly wonky crown of chocolate.",
+      "asset": "rewards/cocoa.svg"
+    },
+    {
+      "id": "pip",
+      "name": "Pip",
+      "description": "A blueberry cupcake, baked for company.",
+      "asset": "rewards/pip.svg"
+    }
+  ],
+  "cosmetics": [
+    {
+      "id": "hat-0",
+      "name": "Chef hat",
+      "slot": "hat",
+      "price": 50,
+      "asset": "rewards/hat-0.svg"
+    },
+    {
+      "id": "hat-1",
+      "name": "Cherry topper",
+      "slot": "hat",
+      "price": 75,
+      "asset": "rewards/hat-1.svg"
+    },
+    {
+      "id": "hat-2",
+      "name": "Butter crown",
+      "slot": "hat",
+      "price": 100,
+      "asset": "rewards/hat-2.svg"
+    },
+    {
+      "id": "hat-3",
+      "name": "Oven mitt",
+      "slot": "hat",
+      "price": 125,
+      "asset": "rewards/hat-3.svg"
+    },
+    {
+      "id": "hat-4",
+      "name": "Sugar bow",
+      "slot": "hat",
+      "price": 150,
+      "asset": "rewards/hat-4.svg"
+    },
+    {
+      "id": "hat-5",
+      "name": "Party candle",
+      "slot": "hat",
+      "price": 200,
+      "asset": "rewards/hat-5.svg"
+    },
+    {
+      "id": "aura-0",
+      "name": "Pink sprinkles",
+      "slot": "aura",
+      "price": 50,
+      "asset": "rewards/aura-0.svg"
+    },
+    {
+      "id": "aura-1",
+      "name": "Sugar stars",
+      "slot": "aura",
+      "price": 75,
+      "asset": "rewards/aura-1.svg"
+    },
+    {
+      "id": "aura-2",
+      "name": "Cocoa chips",
+      "slot": "aura",
+      "price": 100,
+      "asset": "rewards/aura-2.svg"
+    },
+    {
+      "id": "aura-3",
+      "name": "Honey sparks",
+      "slot": "aura",
+      "price": 125,
+      "asset": "rewards/aura-3.svg"
+    },
+    {
+      "id": "aura-4",
+      "name": "Mint confetti",
+      "slot": "aura",
+      "price": 150,
+      "asset": "rewards/aura-4.svg"
+    },
+    {
+      "id": "aura-5",
+      "name": "Blueberry bubbles",
+      "slot": "aura",
+      "price": 200,
+      "asset": "rewards/aura-5.svg"
+    },
+    {
+      "id": "frame-0",
+      "name": "Biscuit frame",
+      "slot": "frame",
+      "price": 50,
+      "asset": "rewards/frame-0.svg"
+    },
+    {
+      "id": "frame-1",
+      "name": "Strawberry frame",
+      "slot": "frame",
+      "price": 75,
+      "asset": "rewards/frame-1.svg"
+    },
+    {
+      "id": "frame-2",
+      "name": "Chocolate frame",
+      "slot": "frame",
+      "price": 100,
+      "asset": "rewards/frame-2.svg"
+    },
+    {
+      "id": "frame-3",
+      "name": "Pistachio frame",
+      "slot": "frame",
+      "price": 125,
+      "asset": "rewards/frame-3.svg"
+    },
+    {
+      "id": "frame-4",
+      "name": "Blueberry frame",
+      "slot": "frame",
+      "price": 150,
+      "asset": "rewards/frame-4.svg"
+    },
+    {
+      "id": "frame-5",
+      "name": "Golden oven",
+      "slot": "frame",
+      "price": 200,
+      "asset": "rewards/frame-5.svg"
+    }
+  ],
+  "badges": [
+    {
+      "id": "first-bake",
+      "name": "First bake",
+      "threshold": 1,
+      "count": 1,
+      "description": "Finish a daily batch with at least 1 point.",
+      "asset": "rewards/badge-first-bake.svg"
+    },
+    {
+      "id": "sweet-start",
+      "name": "Sweet start",
+      "threshold": 100,
+      "count": 1,
+      "description": "Score 100 in one daily batch.",
+      "asset": "rewards/badge-sweet-start.svg"
+    },
+    {
+      "id": "rising-dough",
+      "name": "Rising dough",
+      "threshold": 200,
+      "count": 1,
+      "description": "Score 200 in one daily batch.",
+      "asset": "rewards/badge-rising-dough.svg"
+    },
+    {
+      "id": "golden-batch",
+      "name": "Golden batch",
+      "threshold": 300,
+      "count": 1,
+      "description": "Score 300 in one daily batch.",
+      "asset": "rewards/badge-golden-batch.svg"
+    },
+    {
+      "id": "rare-recipe",
+      "name": "Rare recipe",
+      "threshold": 400,
+      "count": 1,
+      "description": "Score 400 in one daily batch.",
+      "asset": "rewards/badge-rare-recipe.svg"
+    },
+    {
+      "id": "master-baker",
+      "name": "Master baker",
+      "threshold": 500,
+      "count": 1,
+      "description": "Score 500 in one daily batch.",
+      "asset": "rewards/badge-master-baker.svg"
+    },
+    {
+      "id": "sugar-legend",
+      "name": "Sugar legend",
+      "threshold": 600,
+      "count": 1,
+      "description": "Score 600 in one daily batch.",
+      "asset": "rewards/badge-sugar-legend.svg"
+    },
+    {
+      "id": "perfect-oven",
+      "name": "Perfect oven",
+      "threshold": 700,
+      "count": 1,
+      "description": "Score 700 in one daily batch.",
+      "asset": "rewards/badge-perfect-oven.svg"
+    },
+    {
+      "id": "three-trays",
+      "name": "Three trays",
+      "threshold": 100,
+      "count": 3,
+      "description": "Score at least 100 on 3 daily batches.",
+      "asset": "rewards/badge-three-trays.svg"
+    },
+    {
+      "id": "seven-sweets",
+      "name": "Seven sweets",
+      "threshold": 200,
+      "count": 7,
+      "description": "Score at least 200 on 7 daily batches.",
+      "asset": "rewards/badge-seven-sweets.svg"
+    },
+    {
+      "id": "fortnight-feast",
+      "name": "Fortnight feast",
+      "threshold": 300,
+      "count": 14,
+      "description": "Score at least 300 on 14 daily batches.",
+      "asset": "rewards/badge-fortnight-feast.svg"
+    },
+    {
+      "id": "bakery-royalty",
+      "name": "Bakery royalty",
+      "threshold": 400,
+      "count": 30,
+      "description": "Score at least 400 on 30 daily batches.",
+      "asset": "rewards/badge-bakery-royalty.svg"
+    }
+  ],
+  "tiers": [
+    {
+      "min": 0,
+      "sugar": 0,
+      "scraps": 0,
+      "frosting": "Unfrosted",
+      "color": "#9d7e79"
+    },
+    {
+      "min": 1,
+      "sugar": 20,
+      "scraps": 1,
+      "frosting": "Vanilla glaze",
+      "color": "#fff0dc"
+    },
+    {
+      "min": 150,
+      "sugar": 40,
+      "scraps": 2,
+      "frosting": "Strawberry swirl",
+      "color": "#ee719a"
+    },
+    {
+      "min": 300,
+      "sugar": 70,
+      "scraps": 3,
+      "frosting": "Maple shimmer",
+      "color": "#f9c76b"
+    },
+    {
+      "min": 450,
+      "sugar": 105,
+      "scraps": 4,
+      "frosting": "Blueberry sparkle",
+      "color": "#a29bfa"
+    },
+    {
+      "min": 600,
+      "sugar": 150,
+      "scraps": 5,
+      "frosting": "Golden sugar",
+      "color": "#ffe895"
+    }
+  ]
+}

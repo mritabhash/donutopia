@@ -8,15 +8,13 @@ async function api(path,body){
  const response=await fetch(apiOrigin+'/api/social'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(18000)});
  const data=await response.json();if(!response.ok){if(response.status===401){sessionStorage.removeItem('donutopia.identity');token='';$('login').hidden=false;$('dashboard').hidden=true;$('game').hidden=true;clearInterval(poll);}throw Error(data.error||'Request failed.');}return data;
 }
-async function run(action){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{await action();}catch(e){status(e.name==='TimeoutError'?'That took too long. Retry to check your saved progress.':e.message);}finally{busy=false;buttons.forEach(b=>b.disabled=false);}}
+async function run(action){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('button')].map(b=>[b,b.disabled]);buttons.forEach(([b])=>b.disabled=true);try{await action();}catch(e){status(e.name==='TimeoutError'?'That took too long. Retry to check your saved progress.':e.message);}finally{busy=false;buttons.forEach(([b,disabled])=>{if(b.isConnected)b.disabled=disabled;});}}
 function signedOut(){token='';sessionStorage.removeItem('donutopia.identity');clearInterval(poll);location.reload();}
 async function refresh(){
  const me=await api('/me');profile=me.user;$('login').hidden=true;$('dashboard').hidden=false;$('name').value=profile.name;$('invite').textContent=profile.invite;
  $('stats').textContent=`Current streak: ${me.streak.current} · Best streak: ${me.streak.best}`;
  $('history').replaceChildren();for(const g of me.history){const row=line($('history'),`${g.day} · ${g.kind==='room'?'Friends’ batch':'Daily batch'} · ${g.score} points`);button(row,'View',()=>openGame(g.id));}
- $('buddies').replaceChildren();for(const [name,file,days] of [['Glazed Donut','donut',0],['Cookie','cookie',5],['Éclair','eclair',14],['Macaron','macaron',30],['Burnt Donut','burnt-donut',45]]){
- const div=document.createElement('div');div.className='buddy'+(me.streak.best<days?' locked':'');const img=document.createElement('img');img.src=new URL('tiers/'+file+'.svg',base);img.alt=name;div.append(img);line(div,name);line(div,me.streak.best>=days?'Earned':`${days}-day streak`);$('buddies').append(div);
- }
+ await refreshRewards();
  const f=await api('/friends');$('friends').replaceChildren();for(const friend of f.friends){const row=line($('friends'),friend.name+' · '+friend.status);if(friend.status==='pending'&&friend.recipient===profile.id)button(row,'Accept',async()=>{await api('/friends/accept',{id:friend.id});await refresh();});button(row,'Remove',async()=>{await api('/friends/remove',{id:friend.id});await refresh();});}
  const lb=await api('/leaderboard');$('leaderboard').replaceChildren();if(lb.locked)line($('leaderboard'),'Scores appear after you finish.');else lb.players.forEach((p,i)=>line($('leaderboard'),`${i+1}. ${p.name}: ${p.score} points`));
  status('Your bakery is up to date.');
@@ -31,7 +29,7 @@ async function roomRefresh(){
  if(r.room.state==='closed')clearInterval(poll);
 }
 async function watchRoom(id){roomId=id;clearInterval(poll);await roomRefresh();poll=setInterval(()=>{if(!busy)roomRefresh().catch(e=>{clearInterval(poll);status(e.message);});},10000);}
-async function openGame(id){gameId=id;gameState=await api('/games/'+id);$('dashboard').hidden=true;$('game').hidden=false;renderGame();$('game').scrollIntoView({behavior:'smooth'});}
+async function openGame(id){gameId=id;gameState=await api('/games/'+id);$('dashboard').hidden=true;$('game').hidden=false;renderGame();if(gameState.completed&&gameState.kind==='daily')await collectDailyReward(gameState.id);$('game').scrollIntoView({behavior:'smooth'});}
 function renderGame(){
  const g=gameState,n=g.turns.length;$('round').textContent=g.completed?`Batch finished: ${g.score} points`:`Prompt ${n+1} of 7 · ${g.score} points`;$('prompt').textContent=g.completed?'Your results are saved.':g.prompts[n].text;$('answerform').hidden=g.completed;$('results').replaceChildren();
  for(const t of g.turns)line($('results'),`${t.slot+1}. ${g.prompts[t.slot].text} ${t.answer||'Skipped'} · ${t.score} points. ${t.reason}`);
@@ -41,7 +39,7 @@ async function submit(skip=false){
  $('feedback').textContent=skip?'Saving…':'Judging your answer…';
  try{const result=await api('/games/'+gameId+(skip?'/skip':'/answer'),{slot:gameState.turns.length,...(!skip?{answer:$('answer').value}:{})});
  if(result.accepted===false){$('feedback').textContent=result.reason;return;}
- gameState=result;renderGame();$('feedback').textContent=result.completed?'All seven rounds saved.':'Round saved.';
+ gameState=result;renderGame();if(result.completed&&result.kind==='daily')await collectDailyReward(result.id);$('feedback').textContent=result.completed?'All seven rounds saved.':'Round saved.';
  }catch(e){$('feedback').textContent=e.message;const saved=await api('/games/'+gameId).catch(()=>null);if(saved&&saved.turns.length>gameState.turns.length){gameState=saved;renderGame();}throw e;}
 }
 $('export').onclick=()=>run(async()=>{const data=await api('/export');const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='donutopia-account.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
@@ -63,3 +61,17 @@ $('back').onclick=()=>run(async()=>{$('game').hidden=true;await refresh();if(roo
   if(token)await refresh();else status('Sign in to open your bakery.');
  }catch(e){status('Online accounts and rooms are not available yet. '+e.message);}
 })();
+
+let rewardState;
+async function collectDailyReward(id){
+ try{const r=await api('/rewards/claim',{game:id});const p=document.createElement('div');p.className='reward-reveal';p.textContent=`Daily rewards: +${r.reward.sugar} Sugar · +${r.reward.scraps} recipe scraps · ${r.reward.frosting}. Visit your pantry to craft and dress your buddy.`;const tiers=rewardState?.catalog.tiers;const i=tiers?.findIndex(t=>t.frosting===r.reward.frosting);if(i>=0)rewardImage(p,{name:r.reward.frosting,asset:'rewards/frosting-'+i+'.svg'});$('results').prepend(p);}
+ catch(e){const p=document.createElement('p');p.textContent='Your game is saved. Rewards could not be collected yet. Open your reward pantry to retry.';$('results').prepend(p);}
+}
+async function refreshRewards(){
+ try{rewardState=await api('/rewards');$('reward-message').textContent='';renderRewardCatalog($('reward-content'),rewardState.catalog,rewardState,{
+ claim:async id=>{await api('/rewards/claim',{game:id});await refreshRewards();},
+ equip:async(slot,item)=>{await api('/rewards/equip',{slot,item});await refreshRewards();},
+ buy:async item=>{await api('/rewards/buy',{item,key:crypto.randomUUID()});await refreshRewards();$('reward-message').textContent='Added to your wardrobe. Choose Wear to put it on.';},
+ craft:async()=>{const key=sessionStorage.getItem('donutopia.craftKey')||crypto.randomUUID();sessionStorage.setItem('donutopia.craftKey',key);const result=await api('/rewards/craft',{key});sessionStorage.removeItem('donutopia.craftKey');await refreshRewards();const b=rewardState.catalog.buddies.find(b=>b.id===result.item);const reveal=$('reward-reveal');reveal.replaceChildren();reveal.className='reward-reveal';rewardImage(reveal,b);line(reveal,'Fresh from the oven: '+b.name+'!');button(reveal,'Bring along',async()=>{await api('/rewards/equip',{slot:'buddy',item:b.id});await refreshRewards();});reveal.scrollIntoView({behavior:'smooth',block:'center'});}
+ });}catch(e){$('reward-message').textContent='The reward pantry is not available yet. Your saved games are safe. '+e.message;const a=document.createElement('a');a.href=new URL('bakery/',base);a.textContent='Preview all buddies and cosmetics';$('reward-content').replaceChildren(a);}
+}

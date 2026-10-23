@@ -152,6 +152,7 @@ async function socialRoute(request,env,ctx,reply){
   user=await first('SELECT id,name,invite FROM users WHERE subject=?',identity.sub);
  }
  let body={};if(request.method==='POST'){try{body=await bodyOf(request);}catch{fail(400,'Invalid request.');}}
+ if(path.startsWith('/rewards'))return rewardRoute(path,request.method,body,user,db,reply);
  if(path==='/me'){
   if(request.method==='POST'&&body.name!==undefined){
    if(typeof body.name!=='string'||body.name.trim().length<2||body.name.length>32||/[\x00-\x1f\x7f]/.test(body.name))fail(400,'Choose a name between 2 and 32 characters.');
@@ -164,7 +165,9 @@ async function socialRoute(request,env,ctx,reply){
  if(path==='/export'&&request.method==='GET'){
   const games=await all('SELECT id,kind,day,room,prompts,created,completed FROM games WHERE user=?',user.id);
   const turns=await all('SELECT t.* FROM turns t JOIN games g ON g.id=t.game WHERE g.user=?',user.id);
-  return reply({user,games,turns});
+  const wallet=await first('SELECT sugar,scraps FROM reward_wallets WHERE user=?',user.id);
+  const rewards=await all('SELECT * FROM reward_claims WHERE user=?',user.id),items=await all('SELECT * FROM reward_items WHERE user=?',user.id),loadout=await first('SELECT * FROM reward_loadouts WHERE user=?',user.id);
+  return reply({user,games,turns,wallet,rewards,items,loadout});
  }
  if(path==='/delete'&&request.method==='POST'){
   if(body.confirm!=='DELETE MY BAKERY')fail(400,'Type DELETE MY BAKERY to confirm.');
@@ -258,4 +261,62 @@ async function socialRoute(request,env,ctx,reply){
 }
 export async function socialFetch(request,env,ctx,reply){
  try{return await socialRoute(request,env,ctx,reply);}catch(e){return reply({error:e.status?e.message:'Account service temporarily unavailable.'},e.status||503);}
+}
+
+const REWARD_CATALOG = {"craftCost":5,"buddies":[{"id":"glaze","name":"Glaze","description":"A strawberry donut with a generous sprinkle habit.","asset":"rewards/glaze.svg"},{"id":"crumb","name":"Crumb","description":"A chocolate-chip cookie with very small boots.","asset":"rewards/crumb.svg"},{"id":"crescent","name":"Crescent","description":"A buttery croissant, permanently pleased.","asset":"rewards/crescent.svg"},{"id":"mallow","name":"Mallow","description":"A marshmallow who takes softness seriously.","asset":"rewards/mallow.svg"},{"id":"miso","name":"Miso","description":"A pistachio macaron with a sweet centre.","asset":"rewards/miso.svg"},{"id":"cocoa","name":"Cocoa","description":"A brownie with a slightly wonky crown of chocolate.","asset":"rewards/cocoa.svg"},{"id":"pip","name":"Pip","description":"A blueberry cupcake, baked for company.","asset":"rewards/pip.svg"}],"cosmetics":[{"id":"hat-0","name":"Chef hat","slot":"hat","price":50,"asset":"rewards/hat-0.svg"},{"id":"hat-1","name":"Cherry topper","slot":"hat","price":75,"asset":"rewards/hat-1.svg"},{"id":"hat-2","name":"Butter crown","slot":"hat","price":100,"asset":"rewards/hat-2.svg"},{"id":"hat-3","name":"Oven mitt","slot":"hat","price":125,"asset":"rewards/hat-3.svg"},{"id":"hat-4","name":"Sugar bow","slot":"hat","price":150,"asset":"rewards/hat-4.svg"},{"id":"hat-5","name":"Party candle","slot":"hat","price":200,"asset":"rewards/hat-5.svg"},{"id":"aura-0","name":"Pink sprinkles","slot":"aura","price":50,"asset":"rewards/aura-0.svg"},{"id":"aura-1","name":"Sugar stars","slot":"aura","price":75,"asset":"rewards/aura-1.svg"},{"id":"aura-2","name":"Cocoa chips","slot":"aura","price":100,"asset":"rewards/aura-2.svg"},{"id":"aura-3","name":"Honey sparks","slot":"aura","price":125,"asset":"rewards/aura-3.svg"},{"id":"aura-4","name":"Mint confetti","slot":"aura","price":150,"asset":"rewards/aura-4.svg"},{"id":"aura-5","name":"Blueberry bubbles","slot":"aura","price":200,"asset":"rewards/aura-5.svg"},{"id":"frame-0","name":"Biscuit frame","slot":"frame","price":50,"asset":"rewards/frame-0.svg"},{"id":"frame-1","name":"Strawberry frame","slot":"frame","price":75,"asset":"rewards/frame-1.svg"},{"id":"frame-2","name":"Chocolate frame","slot":"frame","price":100,"asset":"rewards/frame-2.svg"},{"id":"frame-3","name":"Pistachio frame","slot":"frame","price":125,"asset":"rewards/frame-3.svg"},{"id":"frame-4","name":"Blueberry frame","slot":"frame","price":150,"asset":"rewards/frame-4.svg"},{"id":"frame-5","name":"Golden oven","slot":"frame","price":200,"asset":"rewards/frame-5.svg"}],"badges":[{"id":"first-bake","name":"First bake","threshold":1,"count":1,"description":"Finish a daily batch with at least 1 point.","asset":"rewards/badge-first-bake.svg"},{"id":"sweet-start","name":"Sweet start","threshold":100,"count":1,"description":"Score 100 in one daily batch.","asset":"rewards/badge-sweet-start.svg"},{"id":"rising-dough","name":"Rising dough","threshold":200,"count":1,"description":"Score 200 in one daily batch.","asset":"rewards/badge-rising-dough.svg"},{"id":"golden-batch","name":"Golden batch","threshold":300,"count":1,"description":"Score 300 in one daily batch.","asset":"rewards/badge-golden-batch.svg"},{"id":"rare-recipe","name":"Rare recipe","threshold":400,"count":1,"description":"Score 400 in one daily batch.","asset":"rewards/badge-rare-recipe.svg"},{"id":"master-baker","name":"Master baker","threshold":500,"count":1,"description":"Score 500 in one daily batch.","asset":"rewards/badge-master-baker.svg"},{"id":"sugar-legend","name":"Sugar legend","threshold":600,"count":1,"description":"Score 600 in one daily batch.","asset":"rewards/badge-sugar-legend.svg"},{"id":"perfect-oven","name":"Perfect oven","threshold":700,"count":1,"description":"Score 700 in one daily batch.","asset":"rewards/badge-perfect-oven.svg"},{"id":"three-trays","name":"Three trays","threshold":100,"count":3,"description":"Score at least 100 on 3 daily batches.","asset":"rewards/badge-three-trays.svg"},{"id":"seven-sweets","name":"Seven sweets","threshold":200,"count":7,"description":"Score at least 200 on 7 daily batches.","asset":"rewards/badge-seven-sweets.svg"},{"id":"fortnight-feast","name":"Fortnight feast","threshold":300,"count":14,"description":"Score at least 300 on 14 daily batches.","asset":"rewards/badge-fortnight-feast.svg"},{"id":"bakery-royalty","name":"Bakery royalty","threshold":400,"count":30,"description":"Score at least 400 on 30 daily batches.","asset":"rewards/badge-bakery-royalty.svg"}],"tiers":[{"min":0,"sugar":0,"scraps":0,"frosting":"Unfrosted","color":"#9d7e79"},{"min":1,"sugar":20,"scraps":1,"frosting":"Vanilla glaze","color":"#fff0dc"},{"min":150,"sugar":40,"scraps":2,"frosting":"Strawberry swirl","color":"#ee719a"},{"min":300,"sugar":70,"scraps":3,"frosting":"Maple shimmer","color":"#f9c76b"},{"min":450,"sugar":105,"scraps":4,"frosting":"Blueberry sparkle","color":"#a29bfa"},{"min":600,"sugar":150,"scraps":5,"frosting":"Golden sugar","color":"#ffe895"}]};
+// Rewards are based exclusively on completed server-scored daily games.
+export function dailyReward(score){
+ const bounded=Math.max(0,Math.min(700,Math.floor(Number(score)||0)));
+ return {...REWARD_CATALOG.tiers.filter(t=>bounded>=t.min).at(-1),score:bounded};
+}
+async function rewardRoute(path,method,body,user,db,reply){
+ const q=(sql,...args)=>db.prepare(sql).bind(...args);
+ const all=async(sql,...args)=>(await q(sql,...args).all()).results;
+ const first=(sql,...args)=>q(sql,...args).first();
+ const owned=()=>all('SELECT item,kind,created FROM reward_items WHERE user=?',user.id);
+ const badges=async()=>{const claims=await all('SELECT score FROM reward_claims WHERE user=?',user.id);return REWARD_CATALOG.badges.filter(b=>claims.filter(c=>c.score>=b.threshold).length>=b.count).map(b=>b.id);};
+ if(path==='/rewards'&&method==='GET'){
+  const wallet=await first('SELECT sugar,scraps FROM reward_wallets WHERE user=?',user.id)||{sugar:0,scraps:0};
+  const pending=await all("SELECT g.id,g.day,COALESCE(SUM(t.score),0) score FROM games g LEFT JOIN turns t ON t.game=g.id LEFT JOIN reward_claims c ON c.game=g.id WHERE g.user=? AND g.kind='daily' AND g.completed IS NOT NULL AND c.game IS NULL GROUP BY g.id ORDER BY g.day DESC",user.id);
+  return reply({catalog:REWARD_CATALOG,wallet,items:await owned(),badges:await badges(),loadout:await first('SELECT buddy,hat,aura,frame,badge FROM reward_loadouts WHERE user=?',user.id)||{},claims:await all('SELECT game,day,score,sugar,scraps,frosting FROM reward_claims WHERE user=? ORDER BY day DESC LIMIT 30',user.id),pending});
+ }
+ if(method!=='POST')fail(405,'Use POST.');
+ if(path==='/rewards/claim'){
+  if(typeof body.game!=='string')fail(400,'Choose a completed daily batch.');
+  const game=await first("SELECT g.id,g.day,COALESCE(SUM(t.score),0) score FROM games g JOIN turns t ON t.game=g.id WHERE g.id=? AND g.user=? AND g.kind='daily' AND g.completed IS NOT NULL GROUP BY g.id HAVING COUNT(t.slot)=7",body.game,user.id);
+  if(!game)fail(409,'Finish a saved daily batch to earn rewards.');
+  const reward=dailyReward(game.score);
+  await q('INSERT OR IGNORE INTO reward_claims(game,user,day,score,sugar,scraps,frosting,created) VALUES(?,?,?,?,?,?,?,?)',game.id,user.id,game.day,reward.score,reward.sugar,reward.scraps,reward.frosting,Date.now()).run();
+  return reply({reward:await first('SELECT game,score,sugar,scraps,frosting FROM reward_claims WHERE game=? AND user=?',game.id,user.id),badges:await badges()});
+ }
+ if(path==='/rewards/buy'||path==='/rewards/craft'){
+  if(typeof body.key!=='string'||!/^[a-zA-Z0-9-]{16,64}$/.test(body.key))fail(400,'Missing purchase reference.');
+  const prior=await first('SELECT item,kind FROM reward_items WHERE user=? AND request_key=?',user.id,body.key);if(prior)return reply({item:prior.item,kind:prior.kind});
+  let item,kind,sugar=0,scraps=0;
+  if(path.endsWith('/buy')){const c=REWARD_CATALOG.cosmetics.find(c=>c.id===body.item);if(!c)fail(400,'Unknown cosmetic.');item=c.id;kind='cosmetic';sugar=c.price;}
+  else{
+   const items=await owned(),pool=REWARD_CATALOG.buddies.filter(b=>!items.some(i=>i.item===b.id));
+   if(!pool.length)fail(409,'You have all seven baking buddies. Keep your scraps for future recipes.');
+   // Rejection sampling avoids modulo bias. Every remaining buddy is equally likely.
+   const limit=Math.floor(4294967296/pool.length)*pool.length;let n;do{n=crypto.getRandomValues(new Uint32Array(1))[0];}while(n>=limit);
+   item=pool[n%pool.length].id;kind='buddy';scraps=REWARD_CATALOG.craftCost;
+  }
+  try{await q('INSERT OR IGNORE INTO reward_items(user,item,kind,sugar_cost,scrap_cost,request_key,created) VALUES(?,?,?,?,?,?,?)',user.id,item,kind,sugar,scraps,body.key,Date.now()).run();}
+  catch(e){if(String(e.message).includes('insufficient_rewards'))fail(409,'You need more '+(scraps?'recipe scraps.':'Sugar.'));throw e;}
+  const result=await first('SELECT item,kind FROM reward_items WHERE user=? AND request_key=?',user.id,body.key);
+  if(!result)fail(409,'That item is already owned. No currency was spent.');
+  return reply(result);
+ }
+ if(path==='/rewards/equip'){
+  const slots=['buddy','hat','aura','frame','badge'];if(!slots.includes(body.slot))fail(400,'Unknown wardrobe slot.');
+  if(body.item!==null){
+   if(body.slot==='badge'){if(!(await badges()).includes(body.item))fail(403,'Earn this badge first.');}
+   else{
+    const catalog=body.slot==='buddy'?REWARD_CATALOG.buddies:REWARD_CATALOG.cosmetics.filter(c=>c.slot===body.slot);
+    if(!catalog.some(c=>c.id===body.item)||!await first('SELECT item FROM reward_items WHERE user=? AND item=?',user.id,body.item))fail(403,'Collect this item first.');
+   }
+  }
+  await q(`INSERT INTO reward_loadouts(user,${body.slot}) VALUES(?,?) ON CONFLICT(user) DO UPDATE SET ${body.slot}=excluded.${body.slot}`,user.id,body.item).run();return reply({ok:true});
+ }
+ fail(404,'Reward action not found.');
 }

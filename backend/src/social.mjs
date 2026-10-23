@@ -50,6 +50,7 @@ async function socialRoute(request,env,ctx,reply){
   user=await first('SELECT id,name,invite FROM users WHERE subject=?',identity.sub);
  }
  let body={};if(request.method==='POST'){try{body=await bodyOf(request);}catch{fail(400,'Invalid request.');}}
+ if(path.startsWith('/rewards'))return rewardRoute(path,request.method,body,user,db,reply);
  if(path==='/me'){
   if(request.method==='POST'&&body.name!==undefined){
    if(typeof body.name!=='string'||body.name.trim().length<2||body.name.length>32||/[\x00-\x1f\x7f]/.test(body.name))fail(400,'Choose a name between 2 and 32 characters.');
@@ -62,7 +63,9 @@ async function socialRoute(request,env,ctx,reply){
  if(path==='/export'&&request.method==='GET'){
   const games=await all('SELECT id,kind,day,room,prompts,created,completed FROM games WHERE user=?',user.id);
   const turns=await all('SELECT t.* FROM turns t JOIN games g ON g.id=t.game WHERE g.user=?',user.id);
-  return reply({user,games,turns});
+  const wallet=await first('SELECT sugar,scraps FROM reward_wallets WHERE user=?',user.id);
+  const rewards=await all('SELECT * FROM reward_claims WHERE user=?',user.id),items=await all('SELECT * FROM reward_items WHERE user=?',user.id),loadout=await first('SELECT * FROM reward_loadouts WHERE user=?',user.id);
+  return reply({user,games,turns,wallet,rewards,items,loadout});
  }
  if(path==='/delete'&&request.method==='POST'){
   if(body.confirm!=='DELETE MY BAKERY')fail(400,'Type DELETE MY BAKERY to confirm.');
