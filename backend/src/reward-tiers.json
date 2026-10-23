@@ -1,0 +1,38 @@
+[
+  {
+    "min": 0,
+    "sugar": 0,
+    "frosting": "Unfrosted",
+    "color": "#9d7e79"
+  },
+  {
+    "min": 1,
+    "sugar": 20,
+    "frosting": "Vanilla glaze",
+    "color": "#fff0dc"
+  },
+  {
+    "min": 150,
+    "sugar": 40,
+    "frosting": "Strawberry swirl",
+    "color": "#ee719a"
+  },
+  {
+    "min": 300,
+    "sugar": 70,
+    "frosting": "Maple shimmer",
+    "color": "#f9c76b"
+  },
+  {
+    "min": 450,
+    "sugar": 105,
+    "frosting": "Blueberry sparkle",
+    "color": "#a29bfa"
+  },
+  {
+    "min": 600,
+    "sugar": 150,
+    "frosting": "Golden sugar",
+    "color": "#ffe895"
+  }
+]

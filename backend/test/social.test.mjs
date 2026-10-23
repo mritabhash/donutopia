@@ -78,18 +78,18 @@ test('rewards use saved daily scores, credit once, reject other users and room g
  const env=environment(),a=await token('reward-a'),b=await token('reward-b');await call(env,a,'/me',{});await call(env,b,'/me',{});
  const id=await completedDaily(env,a,450);
  assert.equal((await call(env,b,'/rewards/claim',{game:id})).status,409);
- const claim=await call(env,a,'/rewards/claim',{game:id,score:700,sugar:99999});assert.equal(claim.reward.sugar,105);assert.equal(claim.reward.scraps,4);
+ const claim=await call(env,a,'/rewards/claim',{game:id,score:700,sugar:99999});assert.equal(claim.reward.sugar,105);assert.ok(claim.reward.scraps>=1&&claim.reward.scraps<=5);
  await Promise.all([call(env,a,'/rewards/claim',{game:id}),call(env,a,'/rewards/claim',{game:id})]);
- const state=await call(env,a,'/rewards');assert.deepEqual(state.wallet,{sugar:105,scraps:4});assert.equal(state.claims.length,1);assert.ok(state.badges.includes('rare-recipe'));assert.ok(!state.badges.includes('master-baker'));
+ const state=await call(env,a,'/rewards');assert.deepEqual(state.wallet,{sugar:105,scraps:claim.reward.scraps});assert.equal(state.claims.length,1);assert.ok(state.badges.length>=1);assert.deepEqual(state.badges,(await call(env,a,'/rewards')).badges);
  const room=await completedDaily(env,a,700,'2026-01-02','room');assert.equal((await call(env,a,'/rewards/claim',{game:room})).status,409);
  const unfinished=(await call(env,a,'/games',{})).id;assert.equal((await call(env,a,'/rewards/claim',{game:unfinished})).status,409);
 });
-test('reward thresholds, zero scores and repeat-day badges use exact boundaries',async()=>{
+test('Sugar boundaries remain stable while scraps and badges are surprises',async()=>{
  const env=environment(),a=await token('threshold');await call(env,a,'/me',{});
  for(const [i,score,sugar,scraps] of [[0,0,0,0],[1,1,20,1],[2,149,20,1],[3,150,40,2],[4,299,40,2],[5,300,70,3],[6,449,70,3],[7,450,105,4],[8,599,105,4],[9,600,150,5],[10,700,150,5]]){
-  const id=await completedDaily(env,a,score,'2026-01-'+String(i+1).padStart(2,'0'));const r=await call(env,a,'/rewards/claim',{game:id});assert.equal(r.reward.sugar,sugar);assert.equal(r.reward.scraps,scraps);
+  const id=await completedDaily(env,a,score,'2026-01-'+String(i+1).padStart(2,'0'));const r=await call(env,a,'/rewards/claim',{game:id});assert.equal(r.reward.sugar,sugar);assert.ok(r.reward.scraps>=1&&r.reward.scraps<=5);
  }
- const state=await call(env,a,'/rewards');assert.ok(state.badges.includes('perfect-oven'));assert.ok(state.badges.includes('three-trays'));assert.ok(state.badges.includes('seven-sweets'));assert.ok(!state.badges.includes('fortnight-feast'));
+ const state=await call(env,a,'/rewards');assert.ok(state.badges.length>0&&state.badges.length<=12);assert.ok(!('tiers' in state.catalog));assert.ok(state.catalog.badges.every(b=>!('threshold' in b)&&!('count' in b)));
 });
 test('shop debits exact price once, rejects overspending, and enforces owned slot matching',async()=>{
  const env=environment(),a=await token('shop');await call(env,a,'/me',{});const id=await completedDaily(env,a,300);await call(env,a,'/rewards/claim',{game:id});
@@ -104,7 +104,7 @@ test('mystery recipes are retry-safe, never duplicate, and stop charging after a
  const env=environment(),a=await token('craft');await call(env,a,'/me',{});
  assert.equal((await call(env,a,'/rewards/craft',{key:crypto.randomUUID()})).status,409);
  for(let i=1;i<=7;i++){const id=await completedDaily(env,a,700,'2026-02-0'+i);await call(env,a,'/rewards/claim',{game:id});}
- const ids=new Set();for(let i=0;i<7;i++){const body={key:crypto.randomUUID()},result=await call(env,a,'/rewards/craft',body);assert.equal(result.status,200);ids.add(result.item);assert.equal((await call(env,a,'/rewards/craft',body)).item,result.item);}
+ env.DB.raw.prepare('UPDATE reward_wallets SET scraps=35').run();const ids=new Set();for(let i=0;i<7;i++){const body={key:crypto.randomUUID()},result=await call(env,a,'/rewards/craft',body);assert.equal(result.status,200);ids.add(result.item);assert.equal((await call(env,a,'/rewards/craft',body)).item,result.item);}
  assert.equal(ids.size,7);assert.equal((await call(env,a,'/rewards')).wallet.scraps,0);
  assert.equal((await call(env,a,'/rewards/craft',{key:crypto.randomUUID()})).status,409);
  const exp=await call(env,a,'/export');assert.equal(exp.items.length,7);assert.equal(exp.rewards.length,7);

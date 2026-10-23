@@ -11,15 +11,13 @@ The website includes seven baking buddies, 18 cosmetics, 12 badges, six frosting
 
 Until steps 1 and 2 are complete, the public `/bakery/` collection works and the account pantry displays an unavailable message. Currency is not simulated in the browser.
 
-## Economy
+## Surprise rewards
 
-Daily total is 0–700, calculated by the existing judge on the server. Tier boundaries are 0, 1, 150, 300, 450 and 600. Sugar payouts are 0/20/40/70/105/150; scrap payouts are 0/1/2/3/4/5. Each reward is claimed once per user and daily game. Past saved daily batches can be claimed, but offline games and room games cannot.
+Sugar and frosting retain server-side score tiers. Scrap amounts are random and saved on first claim. Surprise badges derive from server-generated random game IDs, so retries cannot reroll them. Existing earned badges remain available.
 
-Crafting costs five scraps and selects uniformly among unowned buddies using cryptographic randomness. Duplicates do not charge currency. Once all seven are owned, crafting stops. Keep remaining scraps. All cosmetics are permanent, single-purchase unlocks. There are no paid draws, subscriptions or gameplay boosts.
+The public catalog and reward API omit score thresholds. Players see collected rewards, prices and crafting cost. Buddies and non-frame cosmetics respond to tap, click, Enter or Space with individual dialogue and animation. Reduced-motion settings suppress motion. Frames remain static.
 
-Frosting is recorded on each day's reward, with the latest seven shown in the pantry. Badges use score and qualifying-day counts and never require consecutive days. Equip one buddy, hat, aura, frame and badge in your account display.
-
-Credits and debits are database triggers. Unique claims, owned-item constraints and request keys prevent duplicate rewards and repeat charges. SQL wallet constraints reject overspending atomically. Google identity and existing ownership checks protect each operation. No user-submitted score or price is accepted.
+No additional database migration is needed if 0002_rewards.sql is already installed. Replace and deploy worker.mjs again.
 
 ## Checks
 
